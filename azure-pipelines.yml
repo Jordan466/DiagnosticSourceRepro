@@ -1,0 +1,38 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: NuGetToolInstaller@1
+  displayName: 'Install NuGet'
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '**/*.sln'
+  displayName: 'Restore NuGet Packages'
+
+- task: VSBuild@1
+  inputs:
+    solution: '**/*.sln'
+    msbuildArgs: '/p:Configuration=$(buildConfiguration)'
+    platform: 'Any CPU'
+    configuration: '$(buildConfiguration)'
+  displayName: 'Build Solution (.NET Framework 4.7.2)'
+
+- task: CopyFiles@2
+  inputs:
+    contents: '**\bin\$(buildConfiguration)\**'
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+  displayName: 'Copy Build Outputs'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'drop'
+    publishLocation: 'Container'
+  displayName: 'Publish Artifacts'
